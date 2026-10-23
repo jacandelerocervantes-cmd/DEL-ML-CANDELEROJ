@@ -1,0 +1,9 @@
+# versions used for the submissions (Python 3.12.0)
+rdkit==2026.3.6
+scikit-learn==1.9.1
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.18.1
+torch==2.14.1
+chemprop==2.3.1
+pyarrow==25.0.1

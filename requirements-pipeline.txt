@@ -1,0 +1,8 @@
+# Packages needed by pipeline/run_pipeline.py and pipeline/run_original_chain.py (Python 3.12.0).
+# The full list used during development is in requirements.txt (it also lists torch and chemprop, which this pipeline does not use).
+rdkit==2026.3.6
+scikit-learn==1.9.1
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.18.1
+pyarrow==25.0.1

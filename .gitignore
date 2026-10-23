@@ -1,0 +1,65 @@
+# Challenge data, model weights and per-compound results are not redistributed.
+/data/
+/models/
+/results/
+/submissions/
+/pipeline_in/
+/active_learning_data.csv
+
+# Generated outputs and local work areas
+/pipeline_out/
+/pipeline_out_*/
+/scripts 2/
+
+# Candidate lists: only the two delivered files are kept
+/active_learning_candidates/*
+!/active_learning_candidates/Team_candeleroj_AL1_20261005.csv
+!/active_learning_candidates/Team_candeleroj_AL2_newgroups_20261005.csv
+
+# Python and local environments
+__pycache__/
+*.pyc
+.venv/
+venv*/
+.env
+.ipynb_checkpoints/
+.pytest_cache/
+*.log
+
+# Identification-phase scripts that embed per-round results and named compounds
+/scripts/build_confirmed_outcomes.py
+/scripts/gp_step10_hit_constraints.py
+/scripts/exp6_adaptive_r99.py
+/scripts/exp27_decode.py
+/scripts/exp31_adaptive_groups.py
+
+# Scripts that embed identifiers of confirmed actives from the identification phase
+/scripts/gp_step15_test_v2.py
+/scripts/gp_step17_hinge_series.py
+/scripts/exp32_priors_and_clusters.py
+/scripts/gp_step12_plan_from_99.py
+/scripts/exp28_remaining_prior.py
+/scripts/gp_step35_C11.py
+/scripts/gp_step21_criterion_count.py
+/scripts/gp_step31_C9.py
+/scripts/gp_step34_C10.py
+/scripts/gp_step26_C8.py
+/scripts/gp_step36_C12.py
+/scripts/gp_step16_series_selection.py
+/scripts/gp_step18_final_C.py
+/scripts/gp_step19_final_C3.py
+/scripts/gp_step20_final_C4.py
+/scripts/gp_step22_criterion_selection.py
+/scripts/gp_step23_criterion_selection_C6.py
+/scripts/gp_step24_selection_C7.py
+/scripts/gp_step28_gpcheck.py
+/scripts/gp_step29_negcore_check.py
+
+# Scripts that embed structures of confirmed actives from the identification phase
+/scripts/gp_step13_test_selection.py
+/scripts/series_discovery_engine.py
+
+# Post-hoc analyses that read files from a sibling project folder
+/scripts/exp65_del_effect_AL1.py
+/scripts/exp66_consensus_hit_probabilities.py
+/scripts/exp67_model_vs_known_hits.py
