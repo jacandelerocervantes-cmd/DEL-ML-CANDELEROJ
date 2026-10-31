@@ -48,4 +48,4 @@ Single stages can be run with `--stage inputs|signals|series|al1|al2|ablation|li
 
 ## License
 
-MIT, see `LICENSE`.
+Creative Commons Attribution 4.0 International (CC BY 4.0), see `LICENSE`. Copyright (c) 2026 Juan Antonio Candelero Cervantes.
