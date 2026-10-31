@@ -2,6 +2,8 @@
 
 Active Learning ID: 9783543 (`Team_candeleroj_AL1_20261005.csv`)
 
+Blind validation: the submissions of the validation phase were used for model testing only.
+
 ## Team
 
 Team name: Team_candeleroj
@@ -10,7 +12,7 @@ Team name: Team_candeleroj
 * Juan Antonio Candelero Cervantes, Independent researcher
 
 ### Institution
-* Independent researcher
+* Independent researcher, 97219, Merida, Yucatan, Mexico
 
 ## Summary
 
@@ -18,9 +20,11 @@ This document describes one workflow. It starts from the provided DEL selection 
 
 ## Dataset
 
-Four provided files, no others, described by the role each plays: the DEL selection data (`PGK2_selection.parquet`; 7,703,070 rows, 7,487,570 unique SMILES, not deduplicated); the Active Learning labels (`active_learning_data.csv`; 6,580 compounds, 39 positives); the compounds to score (184,632; the scored pool is these minus the labeled compounds, 178,052); and a structure library of 428,960 SMILES, without labels, used only for the common-substructure criterion. No label other than the Active Learning labels was used to train or score the compounds of the pool in either round.
+**AIRCHECK datasets.** The DEL selection data and the test and validation splits come from AIRCHECK as two datasets: PGK2, UUID `aLNFc0QKh6hLUXlADmM8-V1` (`PGK2_selection.parquet`), and PGK2_CACHE_Val_Test_Set, UUID `Uc1csiT2szUqBJIKA8uH-V1` (`PGK2_Test_split.csv` and `PGK2_Validation_split.csv`). Two further AIRCHECK datasets were downloaded and read only by scripts of the development work, and neither enters the models that generate the two rounds: OPEN DEL, UUID `HHzlNK0ydopW2aymGG5w-V1` (building-block SMILES, read by `scripts/disynthon_score.py`), and PGK2_NTC_Supplement, UUID `b2VuvfPOyqWSn6oPXalq-V1` (241,769 rows, read by `scripts/gp_step1_prepare.py` to widen the NTC background; the positive rule of this workflow uses the `count_NTC` column of `PGK2_selection.parquet` instead).
 
-Earlier stages of the workflow also used two external resources: CACHE #7 co-crystal structures, for docking, and a pretrained DEL transformer (DELBERT). Neither enters the models that generate the two rounds.
+**Files read by the two rounds.** Four provided files, no others, described by the role each plays: the DEL selection data (`PGK2_selection.parquet`; 7,703,070 rows, 7,487,570 unique SMILES, not deduplicated); the Active Learning labels (`active_learning_data.csv`; 6,580 compounds, 39 positives); the compounds to score (`PGK2_Test_split.csv`; 184,632, the scored pool being these minus the labeled compounds, 178,052); and a structure library of 428,960 SMILES (`PGK2_Validation_split.csv`), without labels, used only for the common-substructure criterion. The submission template `active_learning_submission_example.csv` is read for the output format only. No label other than the Active Learning labels was used to train or score the compounds of the pool in either round.
+
+**Resources outside AIRCHECK.** Earlier stages of the workflow also used two: CACHE #7 co-crystal structures, for docking (`PGK2_cmp21.pdb`, `PGK2_cmp47.pdb`, `PGK1_cmp45.pdb`), and a pretrained DEL transformer (DELBERT). Neither enters the models that generate the two rounds.
 
 ## Data preparation
 
@@ -37,7 +41,7 @@ Two instances of one algorithm, trained on different sources: L2-regularized log
 1. **DEL component.** Trained only on the DEL selection data.
 2. **Label component.** Trained on the 6,580 Active Learning labels plus 50,000 background negatives, cross-fitted over two halves of the pool.
 
-The score of a round is `z(label component) + w * z(DEL component)`, with w = 0.1 in round 1 and 0.3 in round 2. 
+The score of a round is `z(label component) + w * z(DEL component)`, with w = 0.1 in round 1 and 0.3 in round 2.
 
 The workflow is not trained on Active Learning data alone. The DEL component learns from 10,551 positive rows (5,797 unique SMILES) and 50,000 negatives of the DEL selection data; the label component learns from 39 positives and 6,541 labeled negatives plus background negatives; the earlier stages come from DEL-trained rankings.
 
@@ -63,6 +67,44 @@ On labels it never saw, the DEL component reaches ROC-AUC 0.770 (bootstrap 95% C
 Across the 100 compounds, 18 depend on the DEL term, all in round 2. Repeating the round 1 rule inside a pool restricted to the top half of the DEL signal (89,026 compounds) returns the same 50, and 47, 45, 44 and 36 for the top 40, 30, 20 and 10%; this follows from the agreement between the two components, and the DEL signal was not used as a filter. Had round 2 taken the next 50 of the round 1 ranking, 46-47 of them would have been neighbors of the round 1 compounds (Tanimoto 0.32 or more) and the 100 compounds would span 15-17 similarity groups instead of 26; the DEL term would have changed 0-5 of them instead of 18. In round 2, 32 of the 50 remain within Tanimoto 0.32 of a round 1 compound; the dissimilar groups apply to the 18 forced compounds.
 
 ## Workflow
+
+The steps are listed in the order in which they were run. Each step names the tool, the molecules it was applied to and, where the tool is published, its version and DOI. Steps 1 to 4 belong to the earlier stages and none of them enters the two rounds; steps 5 to 9 produce them. What each step added and whether it was kept is summarized in *Stages* below.
+
+### Step 1. DEL-trained classifiers
+
+XGBoost 3.4.1 with asymmetric loss and LightGBM 4.7.0, trained on the DEL selection data (7,703,070 rows) and applied to the whole 428,960-compound library to rank it. XGBoost: DOI 10.1145/2939672.2939785. LightGBM: Ke et al., NIPS 2017 proceedings, no DOI found. Those are the latest releases; neither package is pinned in `requirements.txt`, and lightgbm 4.7.0 is also the version present in the development environment. Replaced in the final workflow: the ranking of the library is produced by the logistic DEL component of step 7.
+
+### Step 2. DEL fragment enrichment
+
+Own computation on the DEL selection data (7,703,070 rows), applied to the whole library as one term of the composite scores of the first stages. No published tool, no DOI. Not part of the two rounds.
+
+### Step 3. Docking
+
+AutoDock Vina 1.2.7 (DOI 10.1021/acs.jcim.1c00203; original method 10.1002/jcc.21334), `vina` scoring function, exhaustiveness 4, 24 A box, seed 42. Rigid receptors were built from the CACHE #7 co-crystals `PGK2_cmp21.pdb` and `PGK1_cmp45.pdb` (chain A, ligand LIG in both), with the box centred on the centroid of the co-crystal ligand. Ligands were prepared with Meeko 0.8.0 (`MoleculePreparation`, `PDBQTWriterLegacy`; no DOI found). Applied to subsets, not to the full library: a control of 158 molecules (ATP-competed DEL hits against size-matched DEL non-hits), a screen of 300 pool candidates and a retrospective set of 143. Those are the latest releases of `vina` and `meeko`; neither is pinned in `requirements.txt` and the versions of the development environment are not recorded. Not part of the two rounds.
+
+### Step 4. Pharmacophore scoring
+
+Own scoring, independent of the DEL data, built from the 4-aminoquinazoline hinge motif of the CACHE #7 PGK2 inhibitors and of terazosin bound to the PGK1 nucleotide site (PDB 4O33), with bioisosteric replacements of that core and quinazoline itself excluded. Applied to the pool. No published tool, no DOI. Not part of the two rounds.
+
+### Step 5. Family expansion by Tanimoto similarity
+
+RDKit 2026.03.6 (DOI 10.5281/zenodo.22140358), Morgan fingerprints and Tanimoto similarity, applied to the library to find neighbors of the first confirmed active; each neighbor was checked against the DEL data. Kept in the final workflow as the notion of family used for grouping and exclusion.
+
+### Step 6. Series by maximum common substructure
+
+The organizers' series algorithm (Kruger et al., DOI 10.1021/acs.jcim.0c00204), applied to the known positives, and the resulting maximum common substructures matched against the unlabeled pool with RDKit 2026.03.6. Eight series with at least two known positives were obtained, and 147 unlabeled compounds of the pool contain those substructures. Supplies the 17 series members of round 1.
+
+### Step 7. DEL component
+
+L2-regularized logistic regression (scikit-learn 1.9.1, DOI 10.48550/arXiv.1201.0490), `C = 0.05`, balanced class weights, on Morgan count fingerprints of radius 2 and 2048 bits with `log1p` (RDKit 2026.03.6). Trained on the DEL selection data (10,551 positive rows, 5,797 unique SMILES, against 50,000 negatives drawn at random from `count_PGK2 <= 1`, seed 0) and applied both to the 178,052-compound pool, where it is the DEL term of the score, and to the whole 428,960-compound library, for the positions reported above. Used in both rounds.
+
+### Step 8. Label component
+
+The same algorithm and the same packages, on Morgan count fingerprints of radius 3. Trained on the 6,580 Active Learning labels (39 positives) plus 50,000 background negatives drawn at random from the half of the pool it does not score (seed 48), cross-fitted over two halves, and applied to the 178,052-compound pool. Used in both rounds.
+
+### Step 9. Blend, diversity and grouping
+
+Both component scores are converted to z-scores over the 178,052-compound pool and combined as `z(label component) + w * z(DEL component)`. Diversity and grouping use Tanimoto similarity over Morgan fingerprints and Butina clustering (DOI 10.1021/ci9803381), both from RDKit 2026.03.6, with the thresholds of each round. Applied to the pool; its output is the 50 compounds of each round.
 
 ### Stages
 
@@ -105,6 +147,10 @@ Without the DEL selection data this workflow cannot be executed: they are read t
 ### Tools and reproducibility
 
 Python 3.12.0, scikit-learn 1.9.1 (10.48550/arXiv.1201.0490), numpy 2.5.3 (10.1038/s41586-020-2649-2), pandas 3.0.6 (10.5281/zenodo.3509134), scipy 1.18.1 (10.1038/s41592-019-0686-2), pyarrow 25.0.1 (no DOI found), RDKit 2026.03.6 (10.5281/zenodo.22140358), series algorithm (Kruger et al., 10.1021/acs.jcim.0c00204), Butina clustering (10.1021/ci9803381). A single script (`pipeline/run_pipeline.py`) and the original script chain both reproduce the 100 compounds of the two rounds; the original chain reproduces the score column of the delivered files exactly.
+
+## Final selection
+
+The 50 compounds of round 1 were selected from the 178,052-compound pool scored with `z(label component) + 0.1 * z(DEL component)`, in two parts. Seventeen are series members: the eight series with at least two known positives, with a quota of 3 per series with at least 25 candidates and 2 otherwise, capped at 17. The remaining 33 are the highest-scoring compounds of the pool under two constraints, one InChIKey block per compound and pairwise Tanimoto below 0.6. All 50 lie within the first 119 positions of the label ranking of the pool, and removing the DEL term changes none of them. The delivered file is `Team_candeleroj_AL1_20261005.csv`.
 
 ## Scope of the evidence
 
