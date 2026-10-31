@@ -146,7 +146,18 @@ Without the DEL selection data this workflow cannot be executed: they are read t
 
 ### Tools and reproducibility
 
-Python 3.12.0, scikit-learn 1.9.1 (10.48550/arXiv.1201.0490), numpy 2.5.3 (10.1038/s41586-020-2649-2), pandas 3.0.6 (10.5281/zenodo.3509134), scipy 1.18.1 (10.1038/s41592-019-0686-2), pyarrow 25.0.1 (no DOI found), RDKit 2026.03.6 (10.5281/zenodo.22140358), series algorithm (Kruger et al., 10.1021/acs.jcim.0c00204), Butina clustering (10.1021/ci9803381). A single script (`pipeline/run_pipeline.py`) and the original script chain both reproduce the 100 compounds of the two rounds; the original chain reproduces the score column of the delivered files exactly.
+* Code: https://github.com/jacandelerocervantes-cmd/DEL-ML-CANDELEROJ
+* Python 3.12.0
+* scikit-learn 1.9.1 (DOI 10.48550/arXiv.1201.0490)
+* numpy 2.5.3 (DOI 10.1038/s41586-020-2649-2)
+* pandas 3.0.6 (DOI 10.5281/zenodo.3509134)
+* scipy 1.18.1 (DOI 10.1038/s41592-019-0686-2)
+* pyarrow 25.0.1 (no DOI found)
+* RDKit 2026.03.6 (DOI 10.5281/zenodo.22140358)
+* Series algorithm, Kruger et al. (DOI 10.1021/acs.jcim.0c00204)
+* Butina clustering (DOI 10.1021/ci9803381)
+
+A single script (`pipeline/run_pipeline.py`) and the original script chain both reproduce the 100 compounds of the two rounds; the original chain reproduces the score column of the delivered files exactly.
 
 ## Final selection
 
